@@ -1,0 +1,144 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<title>Student Manager</title>
+
+<style>
+body {
+  font-family: Arial;
+  margin: 40px;
+}
+
+input {
+  padding: 6px;
+  margin: 5px;
+}
+
+button {
+  padding: 6px 10px;
+  margin: 5px;
+}
+
+table {
+  border-collapse: collapse;
+  margin-top: 20px;
+}
+
+td, th {
+  border: 1px solid #ccc;
+  padding: 8px;
+}
+</style>
+
+</head>
+<body>
+
+<h2>Student Manager</h2>
+
+<input id="student_id" placeholder="Student ID">
+<input id="fullname" placeholder="Full Name">
+<input id="dob" type="date">
+<input id="major" placeholder="Major">
+
+<button onclick="addStudent()">Add</button>
+
+<table>
+<thead>
+<tr>
+<th>ID</th>
+<th>StudentID</th>
+<th>Name</th>
+<th>DOB</th>
+<th>Major</th>
+<th>Action</th>
+</tr>
+</thead>
+
+<tbody id="studentTable"></tbody>
+</table>
+
+
+<script>
+
+const API = "/api/students-db"
+
+
+async function loadStudents() {
+
+    const res = await fetch(API)
+    const data = await res.json()
+
+    let html = ""
+
+    data.forEach(s => {
+
+        html += `
+        <tr>
+        <td>${s.id}</td>
+        <td>${s.student_id}</td>
+        <td>${s.fullname}</td>
+        <td>${s.dob}</td>
+        <td>${s.major}</td>
+
+        <td>
+        <button onclick="deleteStudent(${s.id})">Delete</button>
+        </td>
+
+        </tr>
+        `
+    })
+
+    document.getElementById("studentTable").innerHTML = html
+}
+
+
+async function addStudent() {
+
+    await fetch(API, {
+
+        method: "POST",
+
+        headers: {
+            "Content-Type": "application/json"
+        },
+
+        body: JSON.stringify({
+
+            student_id:
+                document.getElementById("student_id").value,
+
+            fullname:
+                document.getElementById("fullname").value,
+
+            dob:
+                document.getElementById("dob").value,
+
+            major:
+                document.getElementById("major").value
+        })
+    })
+
+    loadStudents()
+}
+
+
+async function deleteStudent(id) {
+
+    await fetch(API + "/" + id, {
+
+        method: "DELETE"
+    })
+
+    loadStudents()
+}
+
+
+loadStudents()
+
+</script>
+<a href="/">
+  <button>⬅ Back to Home</button>
+</a>
+</body>
+</html>

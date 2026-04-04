@@ -155,8 +155,16 @@ def add_student():
     with conn.cursor() as cursor:
 
         cursor.execute(
-            "INSERT INTO students(name,email) VALUES(%s,%s)",
-            (data["name"], data["email"])
+            """
+            INSERT INTO students(student_id, fullname, dob, major)
+            VALUES (%s,%s,%s,%s)
+            """,
+            (
+                data["student_id"],
+                data["fullname"],
+                data["dob"],
+                data["major"]
+            )
         )
 
         conn.commit()
@@ -164,7 +172,6 @@ def add_student():
     conn.close()
 
     return jsonify(message="Student added")
-
 
 # =============================
 # UPDATE STUDENT
