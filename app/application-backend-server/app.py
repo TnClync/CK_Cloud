@@ -1,3 +1,4 @@
+from prometheus_client import Counter, generate_latest, CONTENT_TYPE_LATEST
 from flask import Flask, jsonify, request
 import time, requests, os, json
 from jose import jwt
@@ -58,6 +59,22 @@ def get_connection():
 
 app = Flask(__name__)
 
+REQUEST_COUNT = Counter(
+    "http_requests_total",
+    "Total HTTP Requests",
+    ["method", "endpoint", "status"]
+)
+
+@app.after_request
+def track_requests(response):
+
+    REQUEST_COUNT.labels(
+        request.method,
+        request.path,
+        response.status_code
+    ).inc()
+
+    return response
 
 @app.get("/hello")
 def hello():
@@ -220,6 +237,13 @@ def delete_student(id):
 
     return jsonify(message="Student deleted")
 
+
+@app.route("/metrics")
+def metrics():
+
+    return generate_latest(), 200, {
+        "Content-Type": CONTENT_TYPE_LATEST
+    }
 
 # =============================
 # MAIN

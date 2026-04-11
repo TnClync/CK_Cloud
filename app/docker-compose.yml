@@ -55,6 +55,23 @@ services:
     ports: [ "9000:9000", "9001:9001" ]
     networks: [cloud-net]
 
+  minio-init:
+    image: minio/mc
+    container_name: minio-init
+    depends_on:
+      - object-storage-server
+    networks: [cloud-net]
+    entrypoint: >
+      /bin/sh -c "
+      sleep 5;
+      mc alias set local http://object-storage-server:9000 minioadmin minioadmin;
+      mc mb local/profile-pics;
+      mc mb local/documents;
+      mc anonymous set public local/profile-pics;
+      mc anonymous set public local/documents;
+      exit 0;
+      "
+
   internal-dns-server:
     image: internetsystemsconsortium/bind9:9.18
     container_name: internal-dns-server

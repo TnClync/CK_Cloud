@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>MiniCloud Login</title>
+</head>
+<body>
+
+<h2>Login to MiniCloud</h2>
+
+<input id="username" placeholder="username"><br><br>
+<input id="password" type="password" placeholder="password"><br><br>
+
+<button onclick="login()">Login</button>
+
+<h3 id="result"></h3>
+
+<script>
+async function login() {
+
+  const username = document.getElementById("username").value;
+  const password = document.getElementById("password").value;
+
+  const tokenResponse = await fetch(
+    "http://localhost:8081/realms/master/protocol/openid-connect/token",
+    {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/x-www-form-urlencoded"
+      },
+      body:
+        "username=" + username +
+        "&password=" + password +
+        "&grant_type=password" +
+        "&client_id=myapp"
+    }
+  );
+
+  const tokenData = await tokenResponse.json();
+
+  if (!tokenData.access_token) {
+    document.getElementById("result").innerText =
+      "Login failed!";
+    return;
+  }
+
+  const secureResponse = await fetch(
+    "http://localhost/api/secure",
+    {
+      headers: {
+        Authorization:
+          "Bearer " + tokenData.access_token
+      }
+    }
+  );
+
+  const secureData = await secureResponse.json();
+
+  document.getElementById("result").innerText =
+    JSON.stringify(secureData, null, 2);
+}
+</script>
+
+</body>
+</html>
