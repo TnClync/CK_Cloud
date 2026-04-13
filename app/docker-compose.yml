@@ -16,9 +16,6 @@ services:
     container_name: application-backend-server
     networks: [cloud-net]
     ports: ["8085:8081"]
-    environment:
-      OIDC_ISSUER: "http://authentication-identity-server:8080/realms/master"
-      OIDC_AUDIENCE: "myapp"
 
   relational-database-server:
     image: mariadb:11
@@ -38,11 +35,15 @@ services:
     environment:
       KC_BOOTSTRAP_ADMIN_USERNAME: admin
       KC_BOOTSTRAP_ADMIN_PASSWORD: admin
+
+      # ✅ FIX PATH KEYCLOAK
+      KC_HTTP_RELATIVE_PATH: "/auth"
+
+      # ✅ FIX HOST BEHIND REVERSE PROXY
       KC_HOSTNAME: "localhost"
       KC_HOSTNAME_STRICT: "false"
       KC_HTTP_ENABLED: "true"
     ports: ["8081:8080"]
-    restart: unless-stopped
     networks: [cloud-net]
 
   object-storage-server:
@@ -54,7 +55,7 @@ services:
       MINIO_ROOT_PASSWORD: minioadmin
     volumes:
       - ./object-storage-server/data:/data
-    ports: ["9000:9000","9001:9001"]
+    ports: ["9000:9000", "9001:9001"]
     networks: [cloud-net]
 
   internal-dns-server:
@@ -90,12 +91,11 @@ services:
   api-gateway-proxy-server:
     image: nginx:stable
     container_name: api-gateway-proxy-server
+    ports: ["80:80"]
+    volumes:
+      - ./api-gateway-proxy-server/nginx.conf:/etc/nginx/nginx.conf:ro
     depends_on:
       - web-frontend-server
       - application-backend-server
       - authentication-identity-server
-    ports: ["80:80"]
-    volumes:
-      - ./api-gateway-proxy-server/nginx.conf:/etc/nginx/nginx.conf:ro
     networks: [cloud-net]
-    restart: unless-stopped
