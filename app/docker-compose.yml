@@ -3,12 +3,23 @@ networks:
     name: cloud-net
 
 services:
-  web-frontend-server:
+
+# ================= FRONTEND SERVERS =================
+
+  web-frontend-server1:
     build: ./web-frontend-server
     image: hotensv/web:dev
-    container_name: web-frontend-server
+    container_name: web-frontend-server1
     networks: [cloud-net]
-    ports: ["8080:80"]
+
+  web-frontend-server2:
+    build: ./web-frontend-server
+    image: hotensv/web:dev
+    container_name: web-frontend-server2
+    networks: [cloud-net]
+
+
+# ================= BACKEND SERVER =================
 
   application-backend-server:
     build: ./application-backend-server
@@ -16,6 +27,9 @@ services:
     container_name: application-backend-server
     networks: [cloud-net]
     ports: ["8085:8081"]
+
+
+# ================= DATABASE =================
 
   relational-database-server:
     image: mariadb:11
@@ -28,6 +42,9 @@ services:
     ports: ["3306:3306"]
     networks: [cloud-net]
 
+
+# ================= KEYCLOAK =================
+
   authentication-identity-server:
     image: quay.io/keycloak/keycloak:latest
     container_name: authentication-identity-server
@@ -35,16 +52,15 @@ services:
     environment:
       KC_BOOTSTRAP_ADMIN_USERNAME: admin
       KC_BOOTSTRAP_ADMIN_PASSWORD: admin
-
-      # ✅ FIX PATH KEYCLOAK
       KC_HTTP_RELATIVE_PATH: "/auth"
-
-      # ✅ FIX HOST BEHIND REVERSE PROXY
       KC_HOSTNAME: "localhost"
       KC_HOSTNAME_STRICT: "false"
       KC_HTTP_ENABLED: "true"
     ports: ["8081:8080"]
     networks: [cloud-net]
+
+
+# ================= MINIO =================
 
   object-storage-server:
     image: minio/minio
@@ -58,6 +74,9 @@ services:
     ports: ["9000:9000", "9001:9001"]
     networks: [cloud-net]
 
+
+# ================= INTERNAL DNS =================
+
   internal-dns-server:
     image: internetsystemsconsortium/bind9:9.18
     container_name: internal-dns-server
@@ -68,11 +87,17 @@ services:
       - ./internal-dns-server/db.cloud.local:/etc/bind/db.cloud.local:ro
     networks: [cloud-net]
 
+
+# ================= NODE EXPORTER =================
+
   monitoring-node-exporter-server:
     image: prom/node-exporter:latest
     container_name: monitoring-node-exporter-server
     ports: ["9100:9100"]
     networks: [cloud-net]
+
+
+# ================= PROMETHEUS =================
 
   monitoring-prometheus-server:
     image: prom/prometheus:latest
@@ -82,11 +107,17 @@ services:
       - ./monitoring-prometheus-server/prometheus.yml:/etc/prometheus/prometheus.yml:ro
     networks: [cloud-net]
 
+
+# ================= GRAFANA =================
+
   monitoring-grafana-dashboard-server:
     image: grafana/grafana:latest
     container_name: monitoring-grafana-dashboard-server
     ports: ["3000:3000"]
     networks: [cloud-net]
+
+
+# ================= API GATEWAY LOAD BALANCER =================
 
   api-gateway-proxy-server:
     image: nginx:stable
@@ -95,7 +126,8 @@ services:
     volumes:
       - ./api-gateway-proxy-server/nginx.conf:/etc/nginx/nginx.conf:ro
     depends_on:
-      - web-frontend-server
+      - web-frontend-server1
+      - web-frontend-server2
       - application-backend-server
       - authentication-identity-server
     networks: [cloud-net]
