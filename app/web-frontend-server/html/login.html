@@ -14,26 +14,39 @@
 
 <h3 id="result"></h3>
 
+<script src="config.js"></script>
+
 <script>
 async function login() {
 
   const username = document.getElementById("username").value;
   const password = document.getElementById("password").value;
 
+  const KEYCLOAK = window.APP_CONFIG?.KEYCLOAK || "http://localhost:8081";
+  const API_GATEWAY = window.APP_CONFIG?.API_GATEWAY || "http://localhost:8088";
+
+  const body = new URLSearchParams();
+  body.append("username", username);
+  body.append("password", password);
+  body.append("grant_type", "password");
+  body.append("client_id", "myapp");
+
   const tokenResponse = await fetch(
-    "http://localhost:8081/realms/master/protocol/openid-connect/token",
+    KEYCLOAK + "/realms/master/protocol/openid-connect/token",
     {
       method: "POST",
       headers: {
         "Content-Type": "application/x-www-form-urlencoded"
       },
-      body:
-        "username=" + username +
-        "&password=" + password +
-        "&grant_type=password" +
-        "&client_id=myapp"
+      body: body
     }
   );
+
+  if (!tokenResponse.ok) {
+    document.getElementById("result").innerText =
+      "Keycloak error: " + tokenResponse.status;
+    return;
+  }
 
   const tokenData = await tokenResponse.json();
 
@@ -44,11 +57,10 @@ async function login() {
   }
 
   const secureResponse = await fetch(
-    "http://localhost/api/secure",
+    API_GATEWAY + "/api/secure",
     {
       headers: {
-        Authorization:
-          "Bearer " + tokenData.access_token
+        Authorization: "Bearer " + tokenData.access_token
       }
     }
   );

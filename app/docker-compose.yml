@@ -19,6 +19,22 @@ services:
     restart: unless-stopped
 
 
+  web-frontend-server1:
+    build: ./web-frontend-server1
+    image: hotensv/web1:dev
+    container_name: web-frontend-server1
+    networks:
+      - cloud-net
+    restart: unless-stopped
+
+  web-frontend-server2:
+    build: ./web-frontend-server2
+    image: hotensv/web2:dev
+    container_name: web-frontend-server2
+    networks:
+      - cloud-net
+    restart: unless-stopped
+
 # ================= API GATEWAY =================
 
   api-gateway-proxy-server:
@@ -59,8 +75,7 @@ services:
       MARIADB_DATABASE: minicloud
     volumes:
       - ./relational-database-server/init:/docker-entrypoint-initdb.d:ro
-    ports:
-      - "3306:3306"
+    ports: []
     networks:
       - cloud-net
     restart: unless-stopped
@@ -71,12 +86,12 @@ services:
   authentication-identity-server:
     image: quay.io/keycloak/keycloak:latest
     container_name: authentication-identity-server
-    command: start-dev --import-realm
+    command: start-dev 
     environment:
       KC_BOOTSTRAP_ADMIN_USERNAME: admin
       KC_BOOTSTRAP_ADMIN_PASSWORD: admin
       KC_HTTP_ENABLED: "true"
-      KC_HOSTNAME: "localhost"
+      KC_HOSTNAME: ${BASE_URL}
       KC_HOSTNAME_STRICT: "false"
       KC_HOSTNAME_STRICT_HTTPS: "false"
       KC_PROXY: edge
@@ -88,24 +103,24 @@ services:
     volumes:
       - ./keycloak-data:/opt/keycloak/data/
 
-    entrypoint:
-      - /bin/bash
-      - -c
-      - |
-        /opt/keycloak/bin/kc.sh start-dev &
-        echo "Waiting Keycloak start..."
-        sleep 25
+    # entrypoint:
+    #   - /bin/bash
+    #   - -c
+    #   - |
+    #     /opt/keycloak/bin/kc.sh start-dev &
+    #     echo "Waiting Keycloak start..."
+    #     sleep 25
 
-        /opt/keycloak/bin/kcadm.sh config credentials \
-          --server http://localhost:8080 \
-          --realm master \
-          --user admin \
-          --password admin
+    #     /opt/keycloak/bin/kcadm.sh config credentials \
+    #       --server http://localhost:8080 \
+    #       --realm master \
+    #       --user admin \
+    #       --password admin
 
-        /opt/keycloak/bin/kcadm.sh update realms/master -s sslRequired=NONE
+    #     /opt/keycloak/bin/kcadm.sh update realms/master -s sslRequired=NONE
 
-        echo "Keycloak ready"
-        wait
+    #     echo "Keycloak ready"
+    #     wait
 
     networks:
       - cloud-net
