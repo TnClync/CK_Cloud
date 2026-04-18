@@ -1,5 +1,10 @@
 $TTL 1H
-@ IN SOA ns.cloud.local. admin.cloud.local. ( 1 1H 15M 1W 1H )
+@ IN SOA ns.cloud.local. admin.cloud.local. ( 4 1H 15M 1W 1H )
   IN NS ns.cloud.local.
-ns IN A 127.0.0.1
-web-frontend-server IN A 10.10.10.10
+
+ns.cloud.local. IN A 127.0.0.1
+
+web-frontend-server.cloud.local. IN A 10.10.10.10
+app-backend.cloud.local.         IN A 10.10.10.20
+minio.cloud.local.               IN A 10.10.10.30
+keycloak.cloud.local.            IN A 10.10.10.40
