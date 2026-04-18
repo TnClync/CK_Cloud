@@ -4,15 +4,15 @@ import time, requests, os, json
 from jose import jwt
 import pymysql
 
-
 # =============================
 # KEYCLOAK CONFIG
 # =============================
 
 ISSUER = os.getenv(
     "OIDC_ISSUER",
-    "http://authentication-identity-server:8080/realms/realm_sv512h0156_sv523h0191"
+    "http://18.136.123.73:8081/realms/realm_sv512h0156_sv523h0191"
 )
+
 AUDIENCE = os.getenv("OIDC_AUDIENCE", "myapp")
 
 JWKS_URL = f"{ISSUER}/protocol/openid-connect/certs"
@@ -30,6 +30,29 @@ def get_jwks():
         _TS = now
 
     return _JWKS
+
+
+# =============================
+# GET RSA KEY FROM JWKS (FIX CORE BUG)
+# =============================
+
+def get_public_key(token):
+    header = jwt.get_unverified_header(token)
+    kid = header["kid"]
+
+    jwks = get_jwks()
+
+    for key in jwks["keys"]:
+        if key["kid"] == kid:
+            return {
+                "kty": key["kty"],
+                "kid": key["kid"],
+                "use": key["use"],
+                "n": key["n"],
+                "e": key["e"]
+            }
+
+    raise Exception("Public key not found in JWKS")
 
 
 # =============================
@@ -64,16 +87,21 @@ REQUEST_COUNT = Counter(
     ["method", "endpoint", "status"]
 )
 
+
 @app.after_request
 def track_requests(response):
-
     REQUEST_COUNT.labels(
         request.method,
         request.path,
-        response.status_code
+        str(response.status_code)
     ).inc()
 
     return response
+
+
+# =============================
+# HEALTH API
+# =============================
 
 @app.get("/hello")
 def hello():
@@ -81,7 +109,7 @@ def hello():
 
 
 # =============================
-# SECURE API
+# SECURE API (FIXED JWT VERIFY)
 # =============================
 
 @app.get("/secure")
@@ -95,10 +123,11 @@ def secure():
     token = auth.split(" ", 1)[1]
 
     try:
+        key = get_public_key(token)
 
         payload = jwt.decode(
             token,
-            get_jwks(),
+            key,
             algorithms=["RS256"],
             audience=AUDIENCE,
             issuer=ISSUER
@@ -114,16 +143,14 @@ def secure():
 
 
 # =============================
-# READ JSON FILE (OLD API)
+# READ JSON FILE
 # =============================
 
 @app.get("/student")
 def student():
-
     try:
-
-        BASE_DIR = os.path.dirname(__file__)
-        file_path = os.path.join(BASE_DIR, "students.json")
+        base_dir = os.path.dirname(__file__)
+        file_path = os.path.join(base_dir, "students.json")
 
         with open(file_path) as f:
             data = json.load(f)
@@ -135,14 +162,12 @@ def student():
 
 
 # =============================
-# SELECT FROM DATABASE
+# SELECT DB
 # =============================
 
 @app.get("/students-db")
 def students_db():
-
     try:
-
         conn = get_connection()
 
         with conn.cursor() as cursor:
@@ -150,7 +175,6 @@ def students_db():
             result = cursor.fetchall()
 
         conn.close()
-
         return jsonify(result)
 
     except Exception as e:
@@ -158,18 +182,16 @@ def students_db():
 
 
 # =============================
-# INSERT STUDENT
+# INSERT
 # =============================
 
 @app.post("/students-db")
 def add_student():
-
     data = request.json
 
     conn = get_connection()
 
     with conn.cursor() as cursor:
-
         cursor.execute(
             """
             INSERT INTO students(student_id, fullname, dob, major)
@@ -182,70 +204,72 @@ def add_student():
                 data["major"]
             )
         )
-
         conn.commit()
 
     conn.close()
-
     return jsonify(message="Student added")
 
+
 # =============================
-# UPDATE STUDENT
+# UPDATE (FIXED)
 # =============================
 
 @app.put("/students-db/<int:id>")
 def update_student(id):
-
     data = request.json
 
     conn = get_connection()
 
     with conn.cursor() as cursor:
-
         cursor.execute(
-            "UPDATE students SET name=%s,email=%s WHERE id=%s",
-            (data["name"], data["email"], id)
+            """
+            UPDATE students 
+            SET student_id=%s, fullname=%s, dob=%s, major=%s 
+            WHERE id=%s
+            """,
+            (
+                data["student_id"],
+                data["fullname"],
+                data["dob"],
+                data["major"],
+                id
+            )
         )
-
         conn.commit()
 
     conn.close()
-
     return jsonify(message="Student updated")
 
 
 # =============================
-# DELETE STUDENT
+# DELETE
 # =============================
 
 @app.delete("/students-db/<int:id>")
 def delete_student(id):
-
     conn = get_connection()
 
     with conn.cursor() as cursor:
-
-        cursor.execute(
-            "DELETE FROM students WHERE id=%s",
-            (id,)
-        )
-
+        cursor.execute("DELETE FROM students WHERE id=%s", (id,))
         conn.commit()
 
     conn.close()
+    return jsonify(message="Student deleted", id=id)
 
-    return jsonify(message="Student deleted")
 
+# =============================
+# METRICS
+# =============================
 
 @app.route("/metrics")
 def metrics():
-
     return generate_latest(), 200, {
         "Content-Type": CONTENT_TYPE_LATEST
     }
 
+
 # =============================
-# MAIN
+# RUN
 # =============================
 
 if __name__ == "__main__":
