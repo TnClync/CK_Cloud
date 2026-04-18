@@ -145,23 +145,23 @@ services:
       - cloud-net
     restart: unless-stopped
 
-    minio-init:
-      image: minio/mc
-      container_name: minio-init
-      depends_on:
-        - object-storage-server
-      networks:
-        - cloud-net
-      entrypoint: >
-        /bin/sh -c "
-        sleep 5 &&
-        mc alias set myminio http://object-storage-server:9000 minioadmin minioadmin &&
-        mc mb myminio/profile-pics --ignore-existing &&
-        mc mb myminio/documents --ignore-existing &&
-        mc anonymous set public myminio/profile-pics &&
-        mc anonymous set public myminio/documents &&
-        echo '✅ MinIO buckets initialized successfully'
-        "
+  minio-init:
+    image: minio/mc
+    container_name: minio-init
+    depends_on:
+      - object-storage-server
+    networks:
+      - cloud-net
+    entrypoint: >
+      /bin/sh -c "
+      sleep 5 &&
+      mc alias set myminio http://object-storage-server:9000 minioadmin minioadmin &&
+      mc mb myminio/profile-pics --ignore-existing &&
+      mc mb myminio/documents --ignore-existing &&
+      mc anonymous set public myminio/profile-pics &&
+      mc anonymous set public myminio/documents &&
+      echo '✅ MinIO buckets initialized successfully'
+      "
 
 # ================= INTERNAL DNS =================
 
