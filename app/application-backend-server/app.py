@@ -9,8 +9,10 @@ import pymysql
 # KEYCLOAK CONFIG
 # =============================
 
-ISSUER = "http://18.136.123.73:8081/realms/realm_sv512h0156_sv523h0191"
-
+ISSUER = os.getenv(
+    "OIDC_ISSUER",
+    "http://authentication-identity-server:8080/realms/realm_sv512h0156_sv523h0191"
+)
 AUDIENCE = os.getenv("OIDC_AUDIENCE", "myapp")
 
 JWKS_URL = f"{ISSUER}/protocol/openid-connect/certs"
