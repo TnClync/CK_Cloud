@@ -91,7 +91,7 @@ services:
       KC_BOOTSTRAP_ADMIN_USERNAME: admin
       KC_BOOTSTRAP_ADMIN_PASSWORD: admin
       KC_HTTP_ENABLED: "true"
-      KC_HOSTNAME: ${BASE_URL}
+      KC_HOSTNAME: "localhost"
       KC_HOSTNAME_STRICT: "false"
       KC_HOSTNAME_STRICT_HTTPS: "false"
       KC_PROXY: edge
@@ -154,9 +154,7 @@ services:
     ports:
       - "1053:53/udp"
     volumes:
-      - ./internal-dns-server/named.conf.options:/etc/bind/named.conf.options:ro
-      - ./internal-dns-server/named.conf.local:/etc/bind/named.conf.local:ro
-      - ./internal-dns-server/db.cloud.local:/etc/bind/db.cloud.local:ro
+      - ./internal-dns-server:/etc/bind
     networks:
       - cloud-net
     restart: unless-stopped
