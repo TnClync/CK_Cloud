@@ -9,11 +9,9 @@ scrape_configs:
           - monitoring-node-exporter-server:9100
 
 
-  - job_name: web
+  - job_name: 'web'
     static_configs:
-      - targets:
-          - web-frontend-server1:80
-          - web-frontend-server2:80
+      - targets: ['web-frontend-server:80']
 
 
   - job_name: backend
