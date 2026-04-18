@@ -58,7 +58,7 @@ services:
     ports:
       - "8085:8081"
     environment:
-      OIDC_ISSUER: "http://authentication-identity-server:8080/realms/master"
+      OIDC_ISSUER: "http://authentication-identity-server:8080/realms/realm_sv512h0156_sv523h0191"
       OIDC_AUDIENCE: "account"
     networks:
       - cloud-net
