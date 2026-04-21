@@ -58,7 +58,7 @@ services:
     ports:
       - "8085:8081"
     environment:
-      OIDC_ISSUER: "http://localhost:8081/realms/realm_sv512h0156_sv523h0191"
+      OIDC_ISSUER: "http://18.136.123.73:8081/realms/realm_sv512h0156_sv523h0191"
       OIDC_AUDIENCE: "account"
     networks:
       - cloud-net
@@ -91,7 +91,7 @@ services:
       KC_BOOTSTRAP_ADMIN_USERNAME: admin
       KC_BOOTSTRAP_ADMIN_PASSWORD: admin
       KC_HTTP_ENABLED: "true"
-      KC_HOSTNAME: localhost
+      KC_HOSTNAME: 18.136.123.73
       KC_HOSTNAME_STRICT: "false"
       KC_HOSTNAME_STRICT_HTTPS: "false"
       KC_PROXY: edge
