@@ -148,7 +148,7 @@ def secure():
 # READ JSON FILE
 # =============================
 
-@app.get("/api/student")
+@app.get("/student")
 def student():
     try:
         base_dir = os.path.dirname(__file__)
@@ -167,7 +167,7 @@ def student():
 # SELECT DB
 # =============================
 
-@app.get("/api/students-db")
+@app.get("/students-db")
 def students_db():
     try:
         conn = get_connection()
@@ -187,7 +187,7 @@ def students_db():
 # INSERT
 # =============================
 
-@app.post("/api/students-db")
+@app.post("/students-db")
 def add_student():
     data = request.json
 
@@ -216,7 +216,7 @@ def add_student():
 # UPDATE (FIXED)
 # =============================
 
-@app.put("/api/students-db/<int:id>")
+@app.put("/students-db/<int:id>")
 def update_student(id):
     data = request.json
 
@@ -247,7 +247,7 @@ def update_student(id):
 # DELETE
 # =============================
 
-@app.delete("/api/students-db/<int:id>")
+@app.delete("/students-db/<int:id>")
 def delete_student(id):
     conn = get_connection()
 
@@ -275,4 +275,4 @@ def metrics():
 # =============================
 
 if __name__ == "__main__":
-    app.run(host="0.0.0.0", port=8081)
+    app.run(host="0.0.0.0", port=8081, debug =True)
