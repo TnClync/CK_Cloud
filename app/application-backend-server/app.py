@@ -81,7 +81,7 @@ def get_connection():
 # =============================
 
 app = Flask(__name__)
-CORS(app, resources={r"/*": {"origins": "*"}})
+CORS(app)
 REQUEST_COUNT = Counter(
     "http_requests_total",
     "Total HTTP Requests",
