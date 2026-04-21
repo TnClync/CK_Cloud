@@ -1,8 +1,8 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
 <meta charset="UTF-8">
-<title>Student Manager</title>
+<title>Student CRUD</title>
 
 <style>
 body {
@@ -18,127 +18,147 @@ input {
 button {
   padding: 6px 10px;
   margin: 5px;
+  cursor: pointer;
 }
 
 table {
   border-collapse: collapse;
   margin-top: 20px;
+  width: 100%;
 }
 
-td, th {
+th, td {
   border: 1px solid #ccc;
   padding: 8px;
 }
-</style>
 
+th {
+  background: #f2f2f2;
+}
+</style>
 </head>
+
 <body>
 
-<h2>Student Manager</h2>
+<h2>Student CRUD</h2>
 
-<input id="student_id" placeholder="Student ID">
-<input id="fullname" placeholder="Full Name">
-<input id="dob" type="date">
-<input id="major" placeholder="Major">
+<div>
+  <input id="student_id" placeholder="Student ID">
+  <input id="fullname" placeholder="Full Name">
+  <input id="dob" placeholder="DOB (YYYY-MM-DD)">
+  <input id="major" placeholder="Major">
 
-<button onclick="addStudent()">Add</button>
+  <button onclick="createStudent()">Add</button>
+  <button onclick="updateStudent()">Update</button>
+</div>
 
 <table>
-<thead>
-<tr>
-<th>ID</th>
-<th>StudentID</th>
-<th>Name</th>
-<th>DOB</th>
-<th>Major</th>
-<th>Action</th>
-</tr>
-</thead>
-
-<tbody id="studentTable"></tbody>
+  <thead>
+    <tr>
+      <th>ID</th>
+      <th>Student ID</th>
+      <th>Name</th>
+      <th>DOB</th>
+      <th>Major</th>
+      <th>Action</th>
+    </tr>
+  </thead>
+  <tbody id="table"></tbody>
 </table>
-
 
 <script>
 
-const API = "/api/students-db"
+const API = "http://localhost:8085/api/students-db";
 
+let selectedId = null;
 
+// ===================== READ =====================
 async function loadStudents() {
+  const res = await fetch(API);
+  const data = await res.json();
 
-    const res = await fetch(API)
-    const data = await res.json()
+  const table = document.getElementById("table");
+  table.innerHTML = "";
 
-    let html = ""
-
-    data.forEach(s => {
-
-        html += `
-        <tr>
+  data.forEach(s => {
+    table.innerHTML += `
+      <tr>
         <td>${s.id}</td>
         <td>${s.student_id}</td>
         <td>${s.fullname}</td>
         <td>${s.dob}</td>
         <td>${s.major}</td>
-
         <td>
-        <button onclick="deleteStudent(${s.id})">Delete</button>
+          <button onclick='editStudent(${JSON.stringify(s)})'>Edit</button>
+          <button onclick='deleteStudent(${s.id})'>Delete</button>
         </td>
-
-        </tr>
-        `
-    })
-
-    document.getElementById("studentTable").innerHTML = html
+      </tr>
+    `;
+  });
 }
 
+// ===================== CREATE =====================
+async function createStudent() {
+  const data = {
+    student_id: document.getElementById("student_id").value,
+    fullname: document.getElementById("fullname").value,
+    dob: document.getElementById("dob").value,
+    major: document.getElementById("major").value
+  };
 
-async function addStudent() {
+  await fetch(API, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(data)
+  });
 
-    await fetch(API, {
-
-        method: "POST",
-
-        headers: {
-            "Content-Type": "application/json"
-        },
-
-        body: JSON.stringify({
-
-            student_id:
-                document.getElementById("student_id").value,
-
-            fullname:
-                document.getElementById("fullname").value,
-
-            dob:
-                document.getElementById("dob").value,
-
-            major:
-                document.getElementById("major").value
-        })
-    })
-
-    loadStudents()
+  loadStudents();
 }
 
+// ===================== EDIT =====================
+function editStudent(s) {
+  selectedId = s.id;
 
+  document.getElementById("student_id").value = s.student_id;
+  document.getElementById("fullname").value = s.fullname;
+  document.getElementById("dob").value = s.dob;
+  document.getElementById("major").value = s.major;
+}
+
+// ===================== UPDATE =====================
+async function updateStudent() {
+  if (!selectedId) return alert("Select a student first");
+
+  const data = {
+    student_id: document.getElementById("student_id").value,
+    fullname: document.getElementById("fullname").value,
+    dob: document.getElementById("dob").value,
+    major: document.getElementById("major").value
+  };
+
+  await fetch(`${API}/${selectedId}`, {
+    method: "PUT",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(data)
+  });
+
+  selectedId = null;
+  loadStudents();
+}
+
+// ===================== DELETE =====================
 async function deleteStudent(id) {
+  await fetch(`${API}/${id}`, {
+    method: "DELETE"
+  });
 
-    await fetch(API + "/" + id, {
-
-        method: "DELETE"
-    })
-
-    loadStudents()
+  loadStudents();
 }
 
-
-loadStudents()
+// INIT
+loadStudents();
 
 </script>
-<a href="/">
-  <button>⬅ Back to Home</button>
-</a>
+
 </body>
 </html>

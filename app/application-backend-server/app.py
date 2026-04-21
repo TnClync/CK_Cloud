@@ -3,6 +3,7 @@ from flask import Flask, jsonify, request
 import time, requests, os, json
 from jose import jwt
 import pymysql
+from flask_cors import CORS
 
 # =============================
 # KEYCLOAK CONFIG
@@ -62,7 +63,7 @@ def get_public_key(token):
 DB_HOST = "relational-database-server"
 DB_USER = "root"
 DB_PASSWORD = "root"
-DB_NAME = "minicloud"
+DB_NAME = "studentdb"
 
 
 def get_connection():
@@ -80,7 +81,7 @@ def get_connection():
 # =============================
 
 app = Flask(__name__)
-
+CORS(app, resources={r"/*": {"origins": "*"}})
 REQUEST_COUNT = Counter(
     "http_requests_total",
     "Total HTTP Requests",
@@ -146,7 +147,7 @@ def secure():
 # READ JSON FILE
 # =============================
 
-@app.get("/student")
+@app.get("/api/student")
 def student():
     try:
         base_dir = os.path.dirname(__file__)
@@ -165,7 +166,7 @@ def student():
 # SELECT DB
 # =============================
 
-@app.get("/students-db")
+@app.get("/api/students-db")
 def students_db():
     try:
         conn = get_connection()
@@ -185,7 +186,7 @@ def students_db():
 # INSERT
 # =============================
 
-@app.post("/students-db")
+@app.post("/api/students-db")
 def add_student():
     data = request.json
 
@@ -214,7 +215,7 @@ def add_student():
 # UPDATE (FIXED)
 # =============================
 
-@app.put("/students-db/<int:id>")
+@app.put("/api/students-db/<int:id>")
 def update_student(id):
     data = request.json
 
@@ -245,7 +246,7 @@ def update_student(id):
 # DELETE
 # =============================
 
-@app.delete("/students-db/<int:id>")
+@app.delete("/api/students-db/<int:id>")
 def delete_student(id):
     conn = get_connection()
 

@@ -5,13 +5,14 @@ server {
   root /usr/share/nginx/html;
   index index.html;
 
+  # FIX QUAN TRỌNG: SPA fallback
   location / {
-    try_files $uri $uri/ =404;
+    try_files $uri $uri/ /index.html;
   }
 
+  # API metrics giữ nguyên
   location /metrics {
     default_type text/plain;
     return 200 "frontend_up 1\n";
   }
-
 }

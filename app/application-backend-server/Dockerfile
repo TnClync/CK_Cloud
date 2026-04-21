@@ -6,6 +6,7 @@ RUN pip install --no-cache-dir \
     requests \
     python-jose \
     pymysql \
-    prometheus_client
+    prometheus_client\
+    flask-cors
 EXPOSE 8081
 CMD ["python","app.py"]
