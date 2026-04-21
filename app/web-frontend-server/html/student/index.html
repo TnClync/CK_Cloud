@@ -45,7 +45,7 @@ th {
 <div>
   <input id="student_id" placeholder="Student ID">
   <input id="fullname" placeholder="Full Name">
-  <input id="dob" placeholder="DOB (YYYY-MM-DD)">
+  <input id="dob" type="date">
   <input id="major" placeholder="Major">
 
   <button onclick="createStudent()">Add</button>
@@ -71,11 +71,22 @@ th {
 const API = "http://localhost:8085/api/students-db";
 
 let selectedId = null;
+let cache = [];
+
+// ===================== FORMAT DATE =====================
+function formatDate(d) {
+  if (!d) return "";
+  const date = new Date(d);
+  if (isNaN(date)) return d;
+  return date.toISOString().split("T")[0];
+}
 
 // ===================== READ =====================
 async function loadStudents() {
   const res = await fetch(API);
   const data = await res.json();
+
+  cache = data;
 
   const table = document.getElementById("table");
   table.innerHTML = "";
@@ -86,11 +97,11 @@ async function loadStudents() {
         <td>${s.id}</td>
         <td>${s.student_id}</td>
         <td>${s.fullname}</td>
-        <td>${s.dob}</td>
+        <td>${formatDate(s.dob)}</td>
         <td>${s.major}</td>
         <td>
-          <button onclick='editStudent(${JSON.stringify(s)})'>Edit</button>
-          <button onclick='deleteStudent(${s.id})'>Delete</button>
+          <button onclick="editStudent(${s.id})">Edit</button>
+          <button onclick="deleteStudent(${s.id})">Delete</button>
         </td>
       </tr>
     `;
@@ -100,10 +111,10 @@ async function loadStudents() {
 // ===================== CREATE =====================
 async function createStudent() {
   const data = {
-    student_id: document.getElementById("student_id").value,
-    fullname: document.getElementById("fullname").value,
-    dob: document.getElementById("dob").value,
-    major: document.getElementById("major").value
+    student_id: student_id.value,
+    fullname: fullname.value,
+    dob: dob.value,
+    major: major.value
   };
 
   await fetch(API, {
@@ -116,24 +127,30 @@ async function createStudent() {
 }
 
 // ===================== EDIT =====================
-function editStudent(s) {
-  selectedId = s.id;
+function editStudent(id) {
+  const s = cache.find(x => x.id === id);
+  if (!s) return;
 
-  document.getElementById("student_id").value = s.student_id;
-  document.getElementById("fullname").value = s.fullname;
-  document.getElementById("dob").value = s.dob;
-  document.getElementById("major").value = s.major;
+  selectedId = id;
+
+  student_id.value = s.student_id;
+  fullname.value = s.fullname;
+  dob.value = formatDate(s.dob);
+  major.value = s.major;
 }
 
 // ===================== UPDATE =====================
 async function updateStudent() {
-  if (!selectedId) return alert("Select a student first");
+  if (!selectedId) {
+    alert("Select a student first");
+    return;
+  }
 
   const data = {
-    student_id: document.getElementById("student_id").value,
-    fullname: document.getElementById("fullname").value,
-    dob: document.getElementById("dob").value,
-    major: document.getElementById("major").value
+    student_id: student_id.value,
+    fullname: fullname.value,
+    dob: dob.value,
+    major: major.value
   };
 
   await fetch(`${API}/${selectedId}`, {
@@ -143,6 +160,13 @@ async function updateStudent() {
   });
 
   selectedId = null;
+
+  // clear form
+  student_id.value = "";
+  fullname.value = "";
+  dob.value = "";
+  major.value = "";
+
   loadStudents();
 }
 
